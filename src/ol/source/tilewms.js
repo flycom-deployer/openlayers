@@ -241,6 +241,7 @@ ol.source.TileWMS.prototype.getRequestUrl_ = function(tileCoord, tileSize, tileE
 
   var axisOrientation = projection.getAxisOrientation();
   var bbox = tileExtent;
+  bbox = [bbox[0].toFixed(8), bbox[1].toFixed(8), bbox[2].toFixed(8), bbox[3].toFixed(8)];
   if (this.v13_ && axisOrientation.substr(0, 2) == 'ne') {
     var tmp;
     tmp = tileExtent[0];
