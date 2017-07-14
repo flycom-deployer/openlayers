@@ -155,6 +155,12 @@ ol.Map = function(options) {
           options.loadTilesWhileInteracting : false;
 
   /**
+   * @type {boolean}
+   * @private
+   */
+  this.allTilesDone_ = false;
+
+  /**
    * @private
    * @type {number}
    */
@@ -634,6 +640,15 @@ ol.Map.prototype.hasFeatureAtPixel = function(pixel, opt_options) {
       coordinate, this.frameState_, hitTolerance, layerFilter, null);
 };
 
+/**
+  * Detect if all tiles have finished loading.
+  * State is updated after each rendered frame (before postrender event is fired).
+  * @return {boolean} All tiles done?
+  * @api
+  */
+ol.Map.prototype.hasAllTilesDone = function() {
+    return this.allTilesDone_;
+};
 
 /**
  * Returns the coordinate in view projection for a browser event.
@@ -1272,6 +1287,28 @@ ol.Map.prototype.renderFrame_ = function(time) {
       ol.extent.clone(frameState.extent, this.previousExtent_);
     }
   }
+
+    if (frameState) {
+        var allTilesDone = false;
+            var tileQueue = this.tileQueue_;
+
+                if (tileQueue.getTilesLoading() < 1) {
+                  // tileQueue might be empty but some tiles might not be requested yet
+                      var pending = 0;
+                  for (var tileSourceKey in frameState.wantedTiles) {
+                        for (var tileKey in frameState.wantedTiles[tileSourceKey]) {
+                              if (frameState.wantedTiles[tileSourceKey][tileKey]) {
+                                    pending++;
+                                  }
+                            }
+                      }
+
+                      if (pending === 0) {
+                        allTilesDone = true;
+                      }
+                }
+            this.allTilesDone_ = allTilesDone;
+          }
 
   this.dispatchEvent(
       new ol.MapEvent(ol.MapEventType.POSTRENDER, this, frameState));
