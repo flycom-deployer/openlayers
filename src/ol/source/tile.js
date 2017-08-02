@@ -229,7 +229,7 @@ ol.source.Tile.prototype.getTileGridForProjection = function(projection) {
 /**
  * @param {ol.proj.Projection} projection Projection.
  * @return {ol.TileCache} Tile cache.
- * @protected
+ * @api
  */
 ol.source.Tile.prototype.getTileCacheForProjection = function(projection) {
   var thisProj = this.getProjection();
