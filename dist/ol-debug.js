@@ -1,6 +1,6 @@
 // OpenLayers. See https://openlayers.org/
 // License: https://raw.githubusercontent.com/openlayers/openlayers/master/LICENSE.md
-// Version: v4.2.0-2-g68a6781cb
+// Version: v4.2.0-3-ge48e9f61e
 ;(function (root, factory) {
   if (typeof exports === "object") {
     module.exports = factory();
@@ -30034,6 +30034,7 @@ ol.structs.LRUCache.prototype.get = function(key) {
 
 
 /**
+ * @api
  * @return {number} Count.
  */
 ol.structs.LRUCache.prototype.getCount = function() {
@@ -72681,7 +72682,7 @@ ol.source.Tile.prototype.getTileGridForProjection = function(projection) {
 /**
  * @param {ol.proj.Projection} projection Projection.
  * @return {ol.TileCache} Tile cache.
- * @protected
+ * @api
  */
 ol.source.Tile.prototype.getTileCacheForProjection = function(projection) {
   var thisProj = this.getProjection();
@@ -73074,7 +73075,7 @@ ol.source.TileImage = function(options) {
       options.tileClass : ol.ImageTile;
 
   /**
-   * @api
+   * @protected
    * @type {Object.<string, ol.TileCache>}
    */
   this.tileCacheForProjection = {};
@@ -79368,6 +79369,7 @@ goog.require('ol.source.VectorTile');
 goog.require('ol.source.WMTS');
 goog.require('ol.source.XYZ');
 goog.require('ol.source.Zoomify');
+goog.require('ol.structs.LRUCache');
 goog.require('ol.style.AtlasManager');
 goog.require('ol.style.Circle');
 goog.require('ol.style.Fill');
@@ -81100,6 +81102,11 @@ goog.exportProperty(
     'setTextBaseline',
     ol.style.Text.prototype.setTextBaseline);
 
+goog.exportProperty(
+    ol.structs.LRUCache.prototype,
+    'getCount',
+    ol.structs.LRUCache.prototype.getCount);
+
 goog.exportSymbol(
     'ol.source.BingMaps',
     ol.source.BingMaps,
@@ -81391,6 +81398,11 @@ goog.exportProperty(
     ol.source.Tile.prototype.getTileGrid);
 
 goog.exportProperty(
+    ol.source.Tile.prototype,
+    'getTileCacheForProjection',
+    ol.source.Tile.prototype.getTileCacheForProjection);
+
+goog.exportProperty(
     ol.source.Tile.Event.prototype,
     'tile',
     ol.source.Tile.Event.prototype.tile);
@@ -81419,11 +81431,6 @@ goog.exportSymbol(
     'ol.source.TileImage',
     ol.source.TileImage,
     OPENLAYERS);
-
-goog.exportProperty(
-    ol.source.TileImage.prototype,
-    'tileCacheForProjection',
-    ol.source.TileImage.prototype.tileCacheForProjection);
 
 goog.exportProperty(
     ol.source.TileImage.prototype,
@@ -84767,6 +84774,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.UrlTile.prototype,
+    'getTileCacheForProjection',
+    ol.source.UrlTile.prototype.getTileCacheForProjection);
+
+goog.exportProperty(
+    ol.source.UrlTile.prototype,
     'refresh',
     ol.source.UrlTile.prototype.refresh);
 
@@ -84897,6 +84909,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.TileImage.prototype,
+    'getTileCacheForProjection',
+    ol.source.TileImage.prototype.getTileCacheForProjection);
+
+goog.exportProperty(
+    ol.source.TileImage.prototype,
     'refresh',
     ol.source.TileImage.prototype.refresh);
 
@@ -84987,8 +85004,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.BingMaps.prototype,
-    'tileCacheForProjection',
-    ol.source.BingMaps.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.BingMaps.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.BingMaps.prototype,
@@ -85132,8 +85149,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.XYZ.prototype,
-    'tileCacheForProjection',
-    ol.source.XYZ.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.XYZ.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.XYZ.prototype,
@@ -85277,8 +85294,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.CartoDB.prototype,
-    'tileCacheForProjection',
-    ol.source.CartoDB.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.CartoDB.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.CartoDB.prototype,
@@ -86332,8 +86349,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.OSM.prototype,
-    'tileCacheForProjection',
-    ol.source.OSM.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.OSM.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.OSM.prototype,
@@ -86587,8 +86604,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.Stamen.prototype,
-    'tileCacheForProjection',
-    ol.source.Stamen.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.Stamen.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.Stamen.prototype,
@@ -86752,8 +86769,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.TileArcGISRest.prototype,
-    'tileCacheForProjection',
-    ol.source.TileArcGISRest.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.TileArcGISRest.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.TileArcGISRest.prototype,
@@ -86902,6 +86919,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.TileDebug.prototype,
+    'getTileCacheForProjection',
+    ol.source.TileDebug.prototype.getTileCacheForProjection);
+
+goog.exportProperty(
+    ol.source.TileDebug.prototype,
     'refresh',
     ol.source.TileDebug.prototype.refresh);
 
@@ -86992,8 +87014,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.TileJSON.prototype,
-    'tileCacheForProjection',
-    ol.source.TileJSON.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.TileJSON.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.TileJSON.prototype,
@@ -87142,6 +87164,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.TileUTFGrid.prototype,
+    'getTileCacheForProjection',
+    ol.source.TileUTFGrid.prototype.getTileCacheForProjection);
+
+goog.exportProperty(
+    ol.source.TileUTFGrid.prototype,
     'refresh',
     ol.source.TileUTFGrid.prototype.refresh);
 
@@ -87232,8 +87259,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.TileWMS.prototype,
-    'tileCacheForProjection',
-    ol.source.TileWMS.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.TileWMS.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.TileWMS.prototype,
@@ -87437,6 +87464,11 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.VectorTile.prototype,
+    'getTileCacheForProjection',
+    ol.source.VectorTile.prototype.getTileCacheForProjection);
+
+goog.exportProperty(
+    ol.source.VectorTile.prototype,
     'refresh',
     ol.source.VectorTile.prototype.refresh);
 
@@ -87527,8 +87559,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.WMTS.prototype,
-    'tileCacheForProjection',
-    ol.source.WMTS.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.WMTS.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.WMTS.prototype,
@@ -87672,8 +87704,8 @@ goog.exportProperty(
 
 goog.exportProperty(
     ol.source.Zoomify.prototype,
-    'tileCacheForProjection',
-    ol.source.Zoomify.prototype.tileCacheForProjection);
+    'getTileCacheForProjection',
+    ol.source.Zoomify.prototype.getTileCacheForProjection);
 
 goog.exportProperty(
     ol.source.Zoomify.prototype,
@@ -92689,7 +92721,7 @@ goog.exportProperty(
     ol.control.ZoomToExtent.prototype,
     'un',
     ol.control.ZoomToExtent.prototype.un);
-ol.VERSION = 'v4.2.0-2-g68a6781cb';
+ol.VERSION = 'v4.2.0-3-ge48e9f61e';
 OPENLAYERS.ol = ol;
 
   return OPENLAYERS.ol;

@@ -103,6 +103,7 @@ ol.structs.LRUCache.prototype.get = function(key) {
 
 
 /**
+ * @api
  * @return {number} Count.
  */
 ol.structs.LRUCache.prototype.getCount = function() {
