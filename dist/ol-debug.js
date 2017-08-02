@@ -1,6 +1,6 @@
 // OpenLayers. See https://openlayers.org/
 // License: https://raw.githubusercontent.com/openlayers/openlayers/master/LICENSE.md
-// Version: v4.2.0-3-ge48e9f61e
+// Version: v4.2.0-4-g6aa306844
 ;(function (root, factory) {
   if (typeof exports === "object") {
     module.exports = factory();
@@ -72443,7 +72443,7 @@ ol.TileCache.prototype.expireCache = function(usedTiles) {
   while (this.canExpireCache()) {
     tile = this.peekLast();
     zKey = tile.tileCoord[0].toString();
-    if (zKey in usedTiles && usedTiles[zKey].contains(tile.tileCoord)) {
+    if (usedTiles && zKey in usedTiles && usedTiles[zKey].contains(tile.tileCoord)) {
       break;
     } else {
       this.pop().dispose();
@@ -92721,7 +92721,7 @@ goog.exportProperty(
     ol.control.ZoomToExtent.prototype,
     'un',
     ol.control.ZoomToExtent.prototype.un);
-ol.VERSION = 'v4.2.0-3-ge48e9f61e';
+ol.VERSION = 'v4.2.0-4-g6aa306844';
 OPENLAYERS.ol = ol;
 
   return OPENLAYERS.ol;
