@@ -52,20 +52,27 @@ ol.format.GML3 = function(opt_options) {
    * @type {boolean}
    */
   this.multiCurve_ = options.multiCurve !== undefined ?
-      options.multiCurve : true;
+    options.multiCurve : true;
 
   /**
    * @private
    * @type {boolean}
    */
   this.multiSurface_ = options.multiSurface !== undefined ?
-      options.multiSurface : true;
+    options.multiSurface : true;
 
   /**
    * @inheritDoc
    */
   this.schemaLocation = options.schemaLocation ?
-      options.schemaLocation : ol.format.GML3.schemaLocation_;
+    options.schemaLocation : ol.format.GML3.schemaLocation_;
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  this.hasZ = options.hasZ !== undefined ?
+    options.hasZ : false;
 
 };
 ol.inherits(ol.format.GML3, ol.format.GMLBase);
@@ -345,7 +352,7 @@ ol.format.GML3.prototype.readFlatPosList_ = function(node, objectStack) {
   var s = ol.xml.getAllTextContent(node, false).replace(/^\s*|\s*$/g, '');
   var context = objectStack[0];
   var containerSrs = context['srsName'];
-  var containerDimension = node.parentNode.getAttribute('srsDimension');
+  var contextDimension = context['srsDimension'];
   var axisOrientation = 'enu';
   if (containerSrs) {
     var proj = ol.proj.get(containerSrs);
@@ -360,8 +367,11 @@ ol.format.GML3.prototype.readFlatPosList_ = function(node, objectStack) {
   } else if (node.getAttribute('dimension')) {
     dim = ol.format.XSD.readNonNegativeIntegerString(
         node.getAttribute('dimension'));
-  } else if (containerDimension) {
-    dim = ol.format.XSD.readNonNegativeIntegerString(containerDimension);
+  } else if (node.parentNode.getAttribute('srsDimension')) {
+    dim = ol.format.XSD.readNonNegativeIntegerString(
+        node.parentNode.getAttribute('srsDimension'));
+  } else if (contextDimension) {
+    dim = ol.format.XSD.readNonNegativeIntegerString(contextDimension);
   }
   var x, y, z;
   var flatCoordinates = [];
@@ -566,6 +576,8 @@ ol.format.GML3.prototype.SEGMENTS_PARSERS_ = {
 ol.format.GML3.prototype.writePos_ = function(node, value, objectStack) {
   var context = objectStack[objectStack.length - 1];
   var hasZ = context['hasZ'];
+  var srsDimension = hasZ ? 3 : 2;
+  node.setAttribute('srsDimension', srsDimension);
   var srsName = context['srsName'];
   var axisOrientation = 'enu';
   if (srsName) {
@@ -601,8 +613,8 @@ ol.format.GML3.prototype.getCoords_ = function(point, opt_srsName, opt_hasZ) {
     axisOrientation = ol.proj.get(opt_srsName).getAxisOrientation();
   }
   var coords = ((axisOrientation.substr(0, 2) === 'en') ?
-      point[0] + ' ' + point[1] :
-      point[1] + ' ' + point[0]);
+    point[0] + ' ' + point[1] :
+    point[1] + ' ' + point[0]);
   if (opt_hasZ) {
     // For newly created points, Z can be undefined.
     var z = point[2] || 0;
@@ -622,6 +634,8 @@ ol.format.GML3.prototype.getCoords_ = function(point, opt_srsName, opt_hasZ) {
 ol.format.GML3.prototype.writePosList_ = function(node, value, objectStack) {
   var context = objectStack[objectStack.length - 1];
   var hasZ = context['hasZ'];
+  var srsDimension = hasZ ? 3 : 2;
+  node.setAttribute('srsDimension', srsDimension);
   var srsName = context['srsName'];
   // only 2d for simple features profile
   var points = value.getCoordinates();

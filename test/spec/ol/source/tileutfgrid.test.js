@@ -1,4 +1,4 @@
-goog.provide('ol.test.source.TileUTFGrid');
+
 
 goog.require('ol.proj');
 goog.require('ol.source.Tile');
@@ -119,7 +119,7 @@ describe('ol.source.TileUTFGrid', function() {
       var proj3857 = ol.proj.get('EPSG:3857');
       var expectedExtent4326 = tileJson.bounds;
       var expectedExtent3857 = ol.proj.transformExtent(
-        expectedExtent4326, proj4326, proj3857
+          expectedExtent4326, proj4326, proj3857
       );
       expect(extent).to.eql(proj3857.getExtent());
       expect(extent[0]).to.roughlyEqual(expectedExtent3857[0], 1e-8);
@@ -165,21 +165,15 @@ describe('ol.source.TileUTFGrid', function() {
 
     it('sets up correct attribution', function() {
       var source = getTileUTFGrid();
-      expect(source.getAttributions()).to.be(null);
+      expect(source.getAttributions2()).to.be(null);
 
       // call the handleTileJSONResponse method with our
       // locally available tileJson (from `before`)
       source.handleTileJSONResponse(tileJson);
 
-      var attributions = source.getAttributions();
+      var attributions = source.getAttributions2();
       expect(attributions).to.not.be(null);
-      expect(attributions).to.have.length(1);
-      expect(attributions[0].getHTML()).to.be(tileJson.attribution);
-      var tileRanges = attributions[0].tileRanges_;
-      for (var z = tileJson.minzoom; z <= tileJson.maxzoom; z++) {
-        var key = z.toString();
-        expect(key in tileRanges).to.be(true);
-      }
+      expect(typeof attributions).to.be('function');
     });
 
     it('sets correct state', function() {
@@ -261,7 +255,7 @@ describe('ol.source.TileUTFGrid', function() {
         done();
       };
       source.forDataAtCoordinateAndResolution(
-        bonn3857, resolutionZoom1, callback, null, true
+          bonn3857, resolutionZoom1, callback, null, true
       );
     });
 
@@ -272,7 +266,7 @@ describe('ol.source.TileUTFGrid', function() {
         done();
       };
       source.forDataAtCoordinateAndResolution(
-        bonn3857, resolutionZoom1, callback, scope, true
+          bonn3857, resolutionZoom1, callback, scope, true
       );
     });
 
@@ -283,7 +277,7 @@ describe('ol.source.TileUTFGrid', function() {
         done();
       };
       source.forDataAtCoordinateAndResolution(
-        noState3857, resolutionZoom1, callback, null, true
+          noState3857, resolutionZoom1, callback, null, true
       );
     });
 

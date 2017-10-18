@@ -1,4 +1,4 @@
-goog.provide('ol.test.interaction.Translate');
+
 
 goog.require('ol.Collection');
 goog.require('ol.Feature');
@@ -139,6 +139,19 @@ describe('ol.interaction.Translate', function() {
       });
       expect(translate).to.be.a(ol.interaction.Translate);
       expect(translate).to.be.a(ol.interaction.Interaction);
+    });
+
+  });
+
+  describe('setActive', function() {
+
+    it('works when the map is not set', function() {
+      var translate = new ol.interaction.Translate({
+        features: features
+      });
+      expect(translate.getActive()).to.be(true);
+      translate.setActive(false);
+      expect(translate.getActive()).to.be(false);
     });
 
   });

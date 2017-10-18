@@ -1,9 +1,10 @@
-goog.provide('ol.test.format.WFS');
+
 
 goog.require('ol.Feature');
 goog.require('ol.format.GML2');
 goog.require('ol.format.WFS');
 goog.require('ol.format.filter');
+goog.require('ol.geom.LineString');
 goog.require('ol.geom.MultiLineString');
 goog.require('ol.geom.MultiPoint');
 goog.require('ol.geom.MultiPolygon');
@@ -348,14 +349,14 @@ describe('ol.format.WFS', function() {
         featurePrefix: 'topp',
         featureTypes: ['states'],
         filter: ol.format.filter.or(
-          ol.format.filter.and(
-            ol.format.filter.greaterThan('area', 100),
-            ol.format.filter.greaterThanOrEqualTo('pop', 20000)
-          ),
-          ol.format.filter.and(
-            ol.format.filter.lessThan('area', 100),
-            ol.format.filter.lessThanOrEqualTo('pop', 20000)
-          )
+            ol.format.filter.and(
+                ol.format.filter.greaterThan('area', 100),
+                ol.format.filter.greaterThanOrEqualTo('pop', 20000)
+            ),
+            ol.format.filter.and(
+                ol.format.filter.lessThan('area', 100),
+                ol.format.filter.lessThanOrEqualTo('pop', 20000)
+            )
         )
       });
       expect(serialized.firstElementChild).to.xmleql(ol.xml.parse(text));
@@ -505,9 +506,46 @@ describe('ol.format.WFS', function() {
         featurePrefix: 'topp',
         featureTypes: ['states'],
         filter: ol.format.filter.and(
-          ol.format.filter.equalTo('name', 'New York'),
-          ol.format.filter.bbox('the_geom', [1, 2, 3, 4], 'urn:ogc:def:crs:EPSG::4326'),
-          ol.format.filter.greaterThan('population', 2000000)
+            ol.format.filter.equalTo('name', 'New York'),
+            ol.format.filter.bbox('the_geom', [1, 2, 3, 4], 'urn:ogc:def:crs:EPSG::4326'),
+            ol.format.filter.greaterThan('population', 2000000)
+        )
+      });
+      expect(serialized.firstElementChild).to.xmleql(ol.xml.parse(text));
+    });
+
+    it('creates a contains filter', function() {
+      var text =
+          '<wfs:Query xmlns:wfs="http://www.opengis.net/wfs" ' +
+          '    typeName="area" srsName="EPSG:4326" ' +
+          '    xmlns:topp="http://www.openplans.org/topp">' +
+          '  <ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
+          '    <ogc:Contains>' +
+          '      <ogc:PropertyName>the_geom</ogc:PropertyName>' +
+          '      <gml:Polygon xmlns:gml="http://www.opengis.net/gml">' +
+          '        <gml:exterior>' +
+          '          <gml:LinearRing>' +
+          '            <gml:posList srsDimension="2">' +
+          '              10 20 10 25 15 25 15 20 10 20' +
+          '            </gml:posList>' +
+          '          </gml:LinearRing>' +
+          '        </gml:exterior>' +
+          '      </gml:Polygon>' +
+          '    </ogc:Contains>' +
+          '  </ogc:Filter>' +
+          '</wfs:Query>';
+      var serialized = new ol.format.WFS().writeGetFeature({
+        srsName: 'EPSG:4326',
+        featureTypes: ['area'],
+        filter: ol.format.filter.contains(
+            'the_geom',
+            new ol.geom.Polygon([[
+              [10, 20],
+              [10, 25],
+              [15, 25],
+              [15, 20],
+              [10, 20]
+            ]])
         )
       });
       expect(serialized.firstElementChild).to.xmleql(ol.xml.parse(text));
@@ -524,7 +562,7 @@ describe('ol.format.WFS', function() {
           '      <gml:Polygon xmlns:gml="http://www.opengis.net/gml">' +
           '        <gml:exterior>' +
           '          <gml:LinearRing>' +
-          '            <gml:posList>' +
+          '            <gml:posList srsDimension="2">' +
           '              10 20 10 25 15 25 15 20 10 20' +
           '            </gml:posList>' +
           '          </gml:LinearRing>' +
@@ -539,11 +577,11 @@ describe('ol.format.WFS', function() {
         filter: ol.format.filter.intersects(
             'the_geom',
             new ol.geom.Polygon([[
-                [10, 20],
-                [10, 25],
-                [15, 25],
-                [15, 20],
-                [10, 20]
+              [10, 20],
+              [10, 25],
+              [15, 25],
+              [15, 20],
+              [10, 20]
             ]])
         )
       });
@@ -561,7 +599,7 @@ describe('ol.format.WFS', function() {
           '      <gml:Polygon xmlns:gml="http://www.opengis.net/gml">' +
           '        <gml:exterior>' +
           '          <gml:LinearRing>' +
-          '            <gml:posList>' +
+          '            <gml:posList srsDimension="2">' +
           '              10 20 10 25 15 25 15 20 10 20' +
           '            </gml:posList>' +
           '          </gml:LinearRing>' +
@@ -576,11 +614,11 @@ describe('ol.format.WFS', function() {
         filter: ol.format.filter.within(
             'the_geom',
             new ol.geom.Polygon([[
-                [10, 20],
-                [10, 25],
-                [15, 25],
-                [15, 20],
-                [10, 20]
+              [10, 20],
+              [10, 25],
+              [15, 25],
+              [15, 20],
+              [10, 20]
             ]])
         )
       });
@@ -695,6 +733,50 @@ describe('ol.format.WFS', function() {
       });
       expect(serialized).to.xmleql(ol.xml.parse(text));
     });
+
+    it('creates the correct update if geometry name is alias', function() {
+      var format = new ol.format.WFS();
+      var updateFeature = new ol.Feature(new ol.geom.MultiLineString([[
+        [-12279454, 6741885],
+        [-12064207, 6732101],
+        [-11941908, 6595126],
+        [-12240318, 6507071],
+        [-12416429, 6604910]
+      ]]));
+      updateFeature.setGeometryName('the_geom');
+      updateFeature.setId('FAULTS.4455');
+      var serialized = format.writeTransaction(null, [updateFeature], null, {
+        featureNS: 'http://foo',
+        featureType: 'FAULTS',
+        featurePrefix: 'foo',
+        gmlOptions: {srsName: 'EPSG:900913'}
+      });
+      expect(serialized).to.xmleql(ol.xml.parse(text));
+    });
+
+  });
+
+  describe('when writing out a Transaction request', function() {
+
+    it('creates the correct update with default featurePrefix', function() {
+      var format = new ol.format.WFS();
+      var updateFeature = new ol.Feature();
+      updateFeature.setGeometryName('the_geom');
+      updateFeature.setGeometry(new ol.geom.MultiLineString([[
+        [-12279454, 6741885],
+        [-12064207, 6732101],
+        [-11941908, 6595126],
+        [-12240318, 6507071],
+        [-12416429, 6604910]
+      ]]));
+      updateFeature.setId('FAULTS.4455');
+      var serialized = format.writeTransaction(null, [updateFeature], null, {
+        featureNS: 'http://foo',
+        featureType: 'FAULTS',
+        gmlOptions: {srsName: 'EPSG:900913'}
+      });
+      expect(serialized.firstChild.attributes.getNamedItem('xmlns:feature') !== null).to.equal(true);
+    });
   });
 
   describe('when writing out a Transaction request', function() {
@@ -785,6 +867,7 @@ describe('ol.format.WFS', function() {
         unwritten: undefined
       });
       updateFeature.setId('fid.42');
+      updateFeature.setGeometryName('the_geom');
       var updates = [updateFeature];
 
       var deleteFeature = new ol.Feature();
@@ -854,6 +937,7 @@ describe('ol.format.WFS', function() {
         unwritten: undefined
       });
       updateFeature.setId('fid.42');
+      updateFeature.setGeometryName('the_geom');
       var updates = [updateFeature];
 
       var deleteFeature = new ol.Feature();
@@ -897,6 +981,7 @@ describe('ol.format.WFS', function() {
         unwritten: undefined
       });
       updateFeature.setId('fid.42');
+      updateFeature.setGeometryName('the_geom');
       var updates = [updateFeature];
 
       var deleteFeature = new ol.Feature();
@@ -938,6 +1023,7 @@ describe('ol.format.WFS', function() {
         // undefined value means don't create a Property element
         unwritten: undefined
       });
+      updateFeature.setGeometryName('the_geom');
       updateFeature.setId('fid.42');
       var updates = [updateFeature];
 
@@ -979,6 +1065,7 @@ describe('ol.format.WFS', function() {
         // undefined value means don't create a Property element
         unwritten: undefined
       });
+      updateFeature.setGeometryName('the_geom');
       updateFeature.setId('fid.42');
       var updates = [updateFeature];
 
@@ -1182,10 +1269,10 @@ describe('ol.format.WFS', function() {
           '  </And>' +
           '</Filter>';
       var serialized = ol.format.WFS.writeFilter(
-        ol.format.filter.and(
-          ol.format.filter.like('name', 'Mississippi*'),
-          ol.format.filter.equalTo('waterway', 'riverbank')
-        )
+          ol.format.filter.and(
+              ol.format.filter.like('name', 'Mississippi*'),
+              ol.format.filter.equalTo('waterway', 'riverbank')
+          )
       );
       expect(serialized).to.xmleql(ol.xml.parse(text));
     });

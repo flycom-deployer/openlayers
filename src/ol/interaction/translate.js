@@ -185,7 +185,7 @@ ol.interaction.Translate.handleMoveEvent_ = function(event) {
  * Tests to see if the given coordinates intersects any of our selected
  * features.
  * @param {ol.Pixel} pixel Pixel coordinate to test for intersection.
- * @param {ol.Map} map Map to test the intersection on.
+ * @param {ol.PluggableMap} map Map to test the intersection on.
  * @return {ol.Feature} Returns the feature found at the specified pixel
  * coordinates.
  * @private
@@ -245,19 +245,18 @@ ol.interaction.Translate.prototype.handleActiveChanged_ = function() {
 
 
 /**
- * @param {ol.Map} oldMap Old map.
+ * @param {ol.PluggableMap} oldMap Old map.
  * @private
  */
 ol.interaction.Translate.prototype.updateState_ = function(oldMap) {
   var map = this.getMap();
   var active = this.getActive();
-  if ((!map || !active)) {
-    if (!map) {
-      map = oldMap;
+  if (!map || !active) {
+    map = map || oldMap;
+    if (map) {
+      var elem = map.getViewport();
+      elem.classList.remove('ol-grab', 'ol-grabbing');
     }
-
-    var elem = map.getViewport();
-    elem.classList.remove('ol-grab', 'ol-grabbing');
   }
 };
 

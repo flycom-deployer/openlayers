@@ -46,13 +46,23 @@ ol.AtlasManagerInfo;
  * A type that can be used to provide attribution information for data sources.
  *
  * It represents either
- * * a simple string (e.g. `'© Acme Inc.'`),
- * * an array of simple strings (e.g. `['© Acme Inc.', '© Bacme Inc.']`),
- * * an instance of `{@link ol.Attribution}`,
- * * or an array with multiple `{@link ol.Attribution}` instances.
- * @typedef {string|Array.<string>|ol.Attribution|Array.<ol.Attribution>}
+ * * a simple string (e.g. `'© Acme Inc.'`)
+ * * an array of simple strings (e.g. `['© Acme Inc.', '© Bacme Inc.']`)
+ * * a function that returns a string or array of strings (`{@link ol.Attribution2}`)
+ *
+ * Note that the `{@link ol.Attribution}` constructor is deprecated.
+ * @typedef {string|Array.<string>|ol.Attribution2|ol.Attribution|Array.<ol.Attribution>}
  */
 ol.AttributionLike;
+
+
+/**
+ * A function that returns a string or an array of strings representing source
+ * attributions.
+ *
+ * @typedef {function(olx.FrameState): (string|Array.<string>)}
+ */
+ol.Attribution2;
 
 
 /**
@@ -79,6 +89,7 @@ ol.CanvasFunctionType;
 /**
  * @typedef {{lineCap: string,
  *            lineDash: Array.<number>,
+ *            lineDashOffset: number,
  *            lineJoin: string,
  *            lineWidth: number,
  *            miterLimit: number,
@@ -89,7 +100,7 @@ ol.CanvasStrokeState;
 
 /**
  * @typedef {{font: string,
- *            textAlign: string,
+ *            textAlign: (string|undefined),
  *            textBaseline: string}}
  */
 ol.CanvasTextState;
@@ -364,13 +375,12 @@ ol.LRUCacheEntry;
 
 
 /**
- * @typedef {{controls: ol.Collection.<ol.control.Control>,
- *            interactions: ol.Collection.<ol.interaction.Interaction>,
+ * @typedef {{controls: (ol.Collection.<ol.control.Control>|undefined),
+ *            interactions: (ol.Collection.<ol.interaction.Interaction>|undefined),
  *            keyboardEventTarget: (Element|Document),
  *            logos: (Object.<string, (string|Element)>),
  *            overlays: ol.Collection.<ol.Overlay>,
- *            rendererConstructor:
- *                function(new: ol.renderer.Map, Element, ol.Map),
+ *            mapRendererPlugin: olx.MapRendererPlugin,
  *            values: Object.<string, *>}}
  */
 ol.MapOptionsInternal;
@@ -404,7 +414,7 @@ ol.Pixel;
 
 
 /**
- * @typedef {function(ol.Map, ?olx.FrameState): boolean}
+ * @typedef {function(ol.PluggableMap, ?olx.FrameState): boolean}
  */
 ol.PostRenderFunction;
 
@@ -414,7 +424,7 @@ ol.PostRenderFunction;
  * with the {@link ol.Map} as first and an optional {@link olx.FrameState} as
  * second argument. Return `true` to keep this function for the next frame,
  * `false` to remove it.
- * @typedef {function(ol.Map, ?olx.FrameState): boolean}
+ * @typedef {function(ol.PluggableMap, ?olx.FrameState): boolean}
  */
 ol.PreRenderFunction;
 
@@ -580,7 +590,8 @@ ol.SourceSourceOptions;
  *            projection: ol.ProjectionLike,
  *            state: (ol.source.State|undefined),
  *            tileGrid: (ol.tilegrid.TileGrid|undefined),
- *            wrapX: (boolean|undefined)}}
+ *            wrapX: (boolean|undefined),
+ *            transition: (number|undefined)}}
  */
 ol.SourceTileOptions;
 
@@ -599,7 +610,8 @@ ol.SourceTileOptions;
  *            tileUrlFunction: (ol.TileUrlFunctionType|undefined),
  *            url: (string|undefined),
  *            urls: (Array.<string>|undefined),
- *            wrapX: (boolean|undefined)}}
+ *            wrapX: (boolean|undefined),
+ *            transition: (number|undefined)}}
  */
 ol.SourceUrlTileOptions;
 
@@ -623,6 +635,17 @@ ol.StyleFunction;
  *     (ol.geom.Geometry|ol.render.Feature|undefined)}
  */
 ol.StyleGeometryFunction;
+
+
+/**
+ * Custom renderer function. Takes two arguments:
+ *
+ * 1. The pixel coordinates of the geometry in GeoJSON notation.
+ * 2. The {@link olx.render.State} of the layer renderer.
+ *
+ * @typedef {function((ol.Coordinate|Array<ol.Coordinate>|Array.<Array.<ol.Coordinate>>),olx.render.State)}
+ */
+ol.StyleRenderFunction;
 
 
 /**
@@ -721,6 +744,14 @@ ol.ViewAnimation;
  *            buffer: WebGLBuffer}}
  */
 ol.WebglBufferCacheEntry;
+
+
+/**
+ * @typedef {{atlas: ol.style.AtlasManager,
+ *            width: Object.<string, number>,
+ *            height: number}}
+ */
+ol.WebglGlyphAtlas;
 
 
 /**

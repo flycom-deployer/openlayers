@@ -46,7 +46,7 @@ ol.source.Raster = function(options) {
    * @type {ol.source.RasterOperationType}
    */
   this.operationType_ = options.operationType !== undefined ?
-      options.operationType : ol.source.RasterOperationType.PIXEL;
+    options.operationType : ol.source.RasterOperationType.PIXEL;
 
   /**
    * @private
@@ -170,10 +170,10 @@ ol.source.Raster.prototype.setOperation = function(operation, opt_lib) {
 ol.source.Raster.prototype.updateFrameState_ = function(extent, resolution, projection) {
 
   var frameState = /** @type {olx.FrameState} */ (
-      ol.obj.assign({}, this.frameState_));
+    ol.obj.assign({}, this.frameState_));
 
   frameState.viewState = /** @type {olx.ViewState} */ (
-      ol.obj.assign({}, frameState.viewState));
+    ol.obj.assign({}, frameState.viewState));
 
   var center = ol.extent.getCenter(extent);
 
@@ -181,6 +181,8 @@ ol.source.Raster.prototype.updateFrameState_ = function(extent, resolution, proj
   frameState.focus = center;
   frameState.size[0] = Math.round(ol.extent.getWidth(extent) / resolution);
   frameState.size[1] = Math.round(ol.extent.getHeight(extent) / resolution);
+  frameState.time = Date.now();
+  frameState.animate = false;
 
   var viewState = frameState.viewState;
   viewState.center = center;
@@ -220,8 +222,6 @@ ol.source.Raster.prototype.getImage = function(extent, resolution, pixelRatio, p
   var frameState = this.updateFrameState_(extent, resolution, projection);
   this.requestedFrameState_ = frameState;
 
-  frameState.tileQueue.loadMoreTiles(16, 16);
-
   // check if we can't reuse the existing ol.ImageCanvas
   if (this.renderedImageCanvas_) {
     var renderedResolution = this.renderedImageCanvas_.getResolution();
@@ -233,6 +233,12 @@ ol.source.Raster.prototype.getImage = function(extent, resolution, pixelRatio, p
 
   if (!this.renderedImageCanvas_ || this.getRevision() !== this.renderedRevision_) {
     this.processSources_();
+  }
+
+  frameState.tileQueue.loadMoreTiles(16, 16);
+
+  if (frameState.animate) {
+    requestAnimationFrame(this.changed.bind(this));
   }
 
   return this.renderedImageCanvas_;
@@ -293,8 +299,7 @@ ol.source.Raster.prototype.onWorkerComplete_ = function(frameState, err, output,
     var width = Math.round(ol.extent.getWidth(extent) / resolution);
     var height = Math.round(ol.extent.getHeight(extent) / resolution);
     context = ol.dom.createCanvasContext2D(width, height);
-    this.renderedImageCanvas_ = new ol.ImageCanvas(
-        extent, resolution, 1, this.getAttributions(), context.canvas);
+    this.renderedImageCanvas_ = new ol.ImageCanvas(extent, resolution, 1, context.canvas);
   }
   context.putImageData(output, 0, 0);
 

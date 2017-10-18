@@ -1,3 +1,5 @@
+'use strict';
+
 const cleanup = require('rollup-plugin-cleanup');
 const common = require('rollup-plugin-commonjs');
 const node = require('rollup-plugin-node-resolve');
@@ -45,10 +47,9 @@ function main() {
   return Promise.all(pkg.ext.map(ext => {
     const moduleName = ext.name || ext.module;
     const options = {
-      entry: require.resolve(ext.module),
-      dest: `${path.join(__dirname, '..', 'build', 'ol.ext', moduleName.toLowerCase())}.js`,
+      extend: true,
+      input: require.resolve(ext.module),
       format: 'iife',
-      moduleName: moduleName,
       exports: 'named',
       plugins: [
         node(),
@@ -57,7 +58,11 @@ function main() {
         wrap(ext)
       ]
     };
-    return rollup(options).then(bundle => bundle.write(options));
+    return rollup(options).then(bundle => {
+      options.name = moduleName;
+      options.file = `${path.join(__dirname, '..', 'build', 'ol.ext', moduleName.toLowerCase())}.js`;
+      bundle.write(options);
+    });
   }));
 }
 

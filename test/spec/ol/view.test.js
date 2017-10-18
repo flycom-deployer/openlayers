@@ -1,9 +1,11 @@
-goog.provide('ol.test.View');
+
 
 goog.require('ol');
+goog.require('ol.Map');
 goog.require('ol.View');
 goog.require('ol.ViewHint');
 goog.require('ol.extent');
+goog.require('ol.geom.Circle');
 goog.require('ol.geom.LineString');
 goog.require('ol.geom.Point');
 
@@ -457,6 +459,63 @@ describe('ol.View', function() {
       }, 10);
     });
 
+    it('immediately completes for no-op animations', function() {
+      var view = new ol.View({
+        center: [0, 0],
+        zoom: 5
+      });
+
+      view.animate({
+        zoom: 5,
+        center: [0, 0],
+        duration: 25
+      });
+      expect(view.getAnimating()).to.eql(false);
+    });
+
+    it('immediately completes if view is not defined before', function() {
+      var view = new ol.View();
+      var center = [1, 2];
+      var zoom = 3;
+      var rotation = 0.4;
+
+      view.animate({
+        zoom: zoom,
+        center: center,
+        rotation: rotation,
+        duration: 25
+      });
+      expect(view.getAnimating()).to.eql(false);
+      expect(view.getCenter()).to.eql(center);
+      expect(view.getZoom()).to.eql(zoom);
+      expect(view.getRotation()).to.eql(rotation);
+    });
+
+    it('sets final animation state if view is not defined before', function() {
+      var view = new ol.View();
+
+      var center = [1, 2];
+      var zoom = 3;
+      var rotation = 0.4;
+
+      view.animate({
+        zoom: 1
+      }, {
+        center: [2, 3]
+      }, {
+        rotation: 4
+      }, {
+        zoom: zoom,
+        center: center,
+        rotation: rotation,
+        duration: 25
+      });
+      expect(view.getAnimating()).to.eql(false);
+      expect(view.getCenter()).to.eql(center);
+      expect(view.getZoom()).to.eql(zoom);
+      expect(view.getRotation()).to.eql(rotation);
+    });
+
     it('prefers zoom over resolution', function(done) {
       var view = new ol.View({
         center: [0, 0],
@@ -494,6 +553,36 @@ describe('ol.View', function() {
       });
     });
 
+    it('takes the shortest arc to the target rotation', function(done) {
+      var view = new ol.View({
+        center: [0, 0],
+        zoom: 0,
+        rotation: Math.PI / 180 * 1
+      });
+      view.animate({
+        rotation: Math.PI / 180 * 359,
+        duration: 0
+      }, function() {
+        expect(view.getRotation()).to.roughlyEqual(Math.PI / 180 * -1, 1e-12);
+        done();
+      });
+    });
+
+    it('normalizes rotation to angles between -180 and 180 degrees after the anmiation', function(done) {
+      var view = new ol.View({
+        center: [0, 0],
+        zoom: 0,
+        rotation: Math.PI / 180 * 1
+      });
+      view.animate({
+        rotation: Math.PI / 180 * -181,
+        duration: 0
+      }, function() {
+        expect(view.getRotation()).to.roughlyEqual(Math.PI / 180 * 179, 1e-12);
+        done();
+      });
+    });
+
     it('calls a callback when animation completes', function(done) {
       var view = new ol.View({
         center: [0, 0],
@@ -524,6 +613,34 @@ describe('ol.View', function() {
       });
 
       view.setCenter([1, 2]); // interrupt the animation
+    });
+
+    it('calls a callback even if animation is a no-op', function(done) {
+      var view = new ol.View({
+        center: [0, 0],
+        zoom: 0
+      });
+
+      view.animate({
+        zoom: 0,
+        duration: 25
+      }, function(complete) {
+        expect(complete).to.be(true);
+        done();
+      });
+    });
+
+    it('calls a callback if view is not defined before', function(done) {
+      var view = new ol.View();
+
+      view.animate({
+        zoom: 10,
+        duration: 25
+      }, function(complete) {
+        expect(view.getZoom()).to.be(10);
+        expect(complete).to.be(true);
+        done();
+      });
     });
 
     it('can run multiple animations in series', function(done) {
@@ -583,7 +700,7 @@ describe('ol.View', function() {
       expect(view.getHints()[ol.ViewHint.ANIMATING]).to.be(2);
 
       view.animate({
-        rotate: Math.PI,
+        rotation: Math.PI,
         duration: 25
       }, decrement);
       expect(view.getHints()[ol.ViewHint.ANIMATING]).to.be(3);
@@ -610,7 +727,7 @@ describe('ol.View', function() {
       expect(view.getHints()[ol.ViewHint.ANIMATING]).to.be(2);
 
       view.animate({
-        rotate: Math.PI,
+        rotation: Math.PI,
         duration: 25
       });
       expect(view.getHints()[ol.ViewHint.ANIMATING]).to.be(3);
@@ -643,7 +760,7 @@ describe('ol.View', function() {
         expect(view.getAnimating()).to.be(true);
         view.animate({
           zoom: 2,
-          duration: 25
+          duration: 50
         }, function() {
           expect(calls).to.be(1);
           expect(view.getZoom()).to.be(2);
@@ -973,6 +1090,31 @@ describe('ol.View', function() {
 
   });
 
+  describe('#getResolutionForZoom', function() {
+
+    it('returns correct zoom resolution', function() {
+      var view = new ol.View();
+      var max = view.getMaxZoom();
+      var min = view.getMinZoom();
+
+      expect(view.getResolutionForZoom(max)).to.be(view.getMinResolution());
+      expect(view.getResolutionForZoom(min)).to.be(view.getMaxResolution());
+    });
+
+    it('returns correct zoom levels for specifically configured resolutions', function() {
+      var view = new ol.View({
+        resolutions: [10, 8, 6, 4, 2]
+      });
+
+      expect(view.getResolutionForZoom(0)).to.be(10);
+      expect(view.getResolutionForZoom(1)).to.be(8);
+      expect(view.getResolutionForZoom(2)).to.be(6);
+      expect(view.getResolutionForZoom(3)).to.be(4);
+      expect(view.getResolutionForZoom(4)).to.be(2);
+    });
+
+  });
+
   describe('#getMaxZoom', function() {
 
     it('returns the zoom level for the min resolution', function() {
@@ -1160,13 +1302,13 @@ describe('ol.View', function() {
     });
     it('animates when duration is defined', function(done) {
       view.fit(
-        new ol.geom.LineString([[6000, 46000], [6000, 47100], [7000, 46000]]),
-        {
-          size: [200, 200],
-          padding: [100, 0, 0, 100],
-          constrainResolution: false,
-          duration: 25
-        });
+          new ol.geom.LineString([[6000, 46000], [6000, 47100], [7000, 46000]]),
+          {
+            size: [200, 200],
+            padding: [100, 0, 0, 100],
+            constrainResolution: false,
+            duration: 25
+          });
 
       expect(view.getAnimating()).to.eql(true);
 
@@ -1226,4 +1368,75 @@ describe('ol.View', function() {
       expect(view.getCenter()[1]).to.roughlyEqual(46000, 1e-9);
     });
   });
+});
+
+describe('ol.View.isNoopAnimation()', function() {
+
+  var cases = [{
+    animation: {
+      sourceCenter: [0, 0], targetCenter: [0, 0],
+      sourceResolution: 1, targetResolution: 1,
+      sourceRotation: 0, targetRotation: 0
+    },
+    noop: true
+  }, {
+    animation: {
+      sourceCenter: [0, 0], targetCenter: [0, 1],
+      sourceResolution: 1, targetResolution: 1,
+      sourceRotation: 0, targetRotation: 0
+    },
+    noop: false
+  }, {
+    animation: {
+      sourceCenter: [0, 0], targetCenter: [0, 0],
+      sourceResolution: 1, targetResolution: 0,
+      sourceRotation: 0, targetRotation: 0
+    },
+    noop: false
+  }, {
+    animation: {
+      sourceCenter: [0, 0], targetCenter: [0, 0],
+      sourceResolution: 1, targetResolution: 1,
+      sourceRotation: 0, targetRotation: 1
+    },
+    noop: false
+  }, {
+    animation: {
+      sourceCenter: [0, 0], targetCenter: [0, 0]
+    },
+    noop: true
+  }, {
+    animation: {
+      sourceCenter: [1, 0], targetCenter: [0, 0]
+    },
+    noop: false
+  }, {
+    animation: {
+      sourceResolution: 1, targetResolution: 1
+    },
+    noop: true
+  }, {
+    animation: {
+      sourceResolution: 0, targetResolution: 1
+    },
+    noop: false
+  }, {
+    animation: {
+      sourceRotation: 10, targetRotation: 10
+    },
+    noop: true
+  }, {
+    animation: {
+      sourceRotation: 0, targetRotation: 10
+    },
+    noop: false
+  }];
+
+  cases.forEach(function(c, i) {
+    it('works for case ' + i, function() {
+      var noop = ol.View.isNoopAnimation(c.animation);
+      expect(noop).to.equal(c.noop);
+    });
+  });
+
 });

@@ -97,12 +97,13 @@ function rgb2xyz(x) {
 
 function xyz2rgb(x) {
   return 255 * (x <= 0.0031308 ?
-      12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+    12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
 }
 
 var raster = new ol.source.Raster({
   sources: [new ol.source.Stamen({
-    layer: 'watercolor'
+    layer: 'watercolor',
+    transition: 0
   })],
   operation: function(pixels, data) {
     var hcl = rgb2hcl(pixels[0]);
